@@ -65,11 +65,11 @@
 /* ===================================================== 2. CSS VARIABLES ===
    Stripped skeuomorphism. High-contrast precision tones.  */
 :root{
-  /* exterior (stark, bright, thermal with elegant edge warmth) */
-  --sky-bone:    #faf8f6;
-  --sky-amber:   #e3bb8a;
-  --horizon:     #ccaa88;
-  --sand:        #f0ece6;
+  /* exterior (stark, bright, thermal) */
+  --sky-bone:    #f5f7f9;
+  --sky-amber:   #e2e6e9;
+  --horizon:     #c1cad2;
+  --sand:        #eceef0;
   --ink:         #12161a;
   --ink-muted:   #6b7a88;
 
@@ -83,7 +83,7 @@
   /* metals + accents -> sharp, flat architectural signaling */
   --brass:       #c2a782;
   --brass-bright:#e8d5b7;
-  --ember:       #d96633;
+  --ember:       #cc5533;
   --sage:        #7a9099;
 
   /* 1px structural lines */
@@ -174,9 +174,9 @@ p{ max-width:65ch; }
 }
 /* live shader canvas */
 #gl{ position:absolute; inset:0; width:100%; height:100%; z-index:0; }
-/* refined flat fallback (no skeuomorphic gradients, matching lux edge burn) */
+/* refined flat fallback (no skeuomorphic gradients) */
 .hf{ position:absolute; inset:0; z-index:0; display:none; }
-.hf-heat{ background: radial-gradient(circle at 50% 50%, var(--sky-bone) 35%, var(--sky-amber) 100%); }
+.hf-heat{ background: var(--sky-bone); }
 .hf-cool{ opacity:0; background: var(--night-deep); }
 .no-webgl .hf{ display:block; }
 .no-webgl #gl{ display:none; }
@@ -263,7 +263,7 @@ p{ max-width:65ch; }
 .concierge{ display:grid; gap:var(--s6); margin-top:var(--s6); align-items:start; }
 @media (min-width:860px){ .concierge{ grid-template-columns:40% 1fr; gap:var(--s7); } }
 
-/* Abstract geometric key / dial */
+/* Abstract geometric key / dial (replaces skeuomorphic SVG) */
 .keywrap{ display:flex; flex-direction:column; align-items:flex-start; gap:var(--s4); }
 .key{ width:80px; height:80px; transition:transform 1s cubic-bezier(0.2, 0, 0, 1); transform-origin:center center; color: var(--bone); }
 .keywrap.turned .key{ transform:rotate(90deg); color: var(--brass-bright); }
@@ -303,7 +303,7 @@ p{ max-width:65ch; }
 .seg button[aria-pressed="true"]{ border-color:var(--bone); color:var(--bone); }
 .seg button:hover{ border-color:var(--bone); color:var(--bone); }
 
-/* Solid, flat action button */
+/* Solid, flat action button (no pill gradients) */
 .turnkey{
   margin-top:var(--s3); display:inline-flex; align-items:center; justify-content: center;
   background:transparent; color:var(--bone); border:1px solid var(--line-dark);
@@ -595,9 +595,10 @@ tbody td:first-child{ font-family:"Geist Mono", monospace; font-size:0.7rem; let
   var canvas        = document.getElementById("gl");
 
   /* =====================================================================
-     WEBGL SEAL SHADER (ST_006 -> V3: Lux Phoenix Heat Edge Burn).
-     Refined math: Pristine white/bone center, mathematically precise 
-     golden-amber vignette pushing in from the edges with subtle thermal noise.
+     WEBGL SEAL SHADER (ST_006 -> V2).
+     Refined math: removed tacky circular wipe and rainbow seam.
+     Now an organic thermal distortion that gets enveloped by a clean,
+     monolithic vertical dark wipe. High contrast, precise colors.
      ===================================================================== */
   var gl=null, prog=null, uTime=null, uProg=null, uRes=null, startT=performance.now();
   var glOK=false;
@@ -615,15 +616,11 @@ tbody td:first-child{ font-family:"Geist Mono", monospace; font-size:0.7rem; let
   "  vec2 uv=gl_FragCoord.xy/uRes; float aspect=uRes.x/uRes.y; vec2 suv=vec2(uv.x*aspect,uv.y);",
   "  float t=uTime;",
   
-  /* Refined exterior: Pristine center, phoenix amber edge burn */
-  "  vec3 bone=vec3(0.98,0.975,0.965);", // Pure warm center
-  "  vec3 amberEdge=vec3(0.96,0.76,0.48);", // Elegant golden-amber edge
+  /* Refined exterior: Stark off-whites, no gradients, clean thermal noise */
+  "  vec3 bone=vec3(0.96,0.968,0.976);",
+  "  vec3 amber=vec3(0.886,0.901,0.913);",
   "  float heat=fbm(suv*4.0+vec2(0.0,t*0.5)+fbm(suv*2.0-t*0.2));",
-  
-  "  float dist = distance(uv, vec2(0.5, 0.5));",
-  "  float vignette = smoothstep(0.2, 0.9, dist);", // Soft exponential spread from edges
-  "  vec3 extBase = mix(bone, amberEdge, vignette * 0.55);",
-  "  vec3 ext = mix(extBase, amberEdge, (heat-0.5) * 0.25 * vignette);", // Apply heat variance strictly to edges
+  "  vec3 ext=mix(bone,amber,(heat-0.5)*0.3);", // subtle texture
   
   /* Refined interior: elegant midnight slate (No Black) */
   "  vec3 night=vec3(0.07,0.086,0.102);",
